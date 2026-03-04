@@ -83,16 +83,38 @@ jobs:
             }
 
             // ── Etiquetas ──────────────────────────────────────────
-            if (deadlineLabel) {
+            const labelsToAdd = [];
+            if (deadlineLabel) labelsToAdd.push(deadlineLabel);
+            if (errors.length > 0) labelsToAdd.push('entrega-incorrecta');
+
+            if (labelsToAdd.length > 0) {
               try {
                 await github.rest.issues.addLabels({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: context.issue.number,
-                  labels: [deadlineLabel]
+                  labels: labelsToAdd
                 });
               } catch (e) {
                 console.log(`No se pudo añadir etiqueta: ${e.message}`);
+              }
+            }
+
+            // Retirar etiquetas que ya no aplican
+            const currentLabels = context.payload.pull_request.labels.map(l => l.name);
+            const labelsToRemove = ['entrega-incorrecta', 'fuera-de-plazo']
+              .filter(l => currentLabels.includes(l) && !labelsToAdd.includes(l));
+
+            for (const label of labelsToRemove) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  name: label
+                });
+              } catch (e) {
+                console.log(`No se pudo retirar etiqueta ${label}: ${e.message}`);
               }
             }
 
