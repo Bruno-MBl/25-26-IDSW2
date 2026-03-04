@@ -46,6 +46,7 @@ jobs:
 
             // ── 2. Rutas válidas y carpeta única ───────────────────
             const students = new Set();
+            const NAMING_CONVENTION = /^[a-záéíóúñü]+[A-ZÁÉÍÓÚÑÜ][a-záéíóúñü]+$/;
 
             for (const path of filePaths) {
               const rootMatch = path.match(STUDENT_ROOT);
@@ -61,6 +62,12 @@ jobs:
 
             if (students.size > 1) {
               errors.push(`Archivos de múltiples carpetas: ${[...students].map(s => `\`${s}\``).join(', ')}`);
+            }
+
+            for (const name of students) {
+              if (!NAMING_CONVENTION.test(name)) {
+                errors.push(`Carpeta \`${name}\` no sigue la convención \`apellidoNombre\` (ej: \`masiasManuel\`).`);
+              }
             }
 
             // ── 3. Artefactos obligatorios ─────────────────────────
